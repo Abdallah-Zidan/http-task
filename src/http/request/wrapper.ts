@@ -4,7 +4,7 @@ import { compactObj } from "../../utility";
 import { urlToConfig } from "./url";
 import { sendRequest, manageUnauthorized } from "../adapter";
 import { Types } from "../response/content-types";
-import { Task } from "../../ADT";
+import { Task, checkRejectionCallback } from "../../ADT";
 
 async function formConfigurations(url: string, config: any) {
   const urlConfig = await urlToConfig(url);
@@ -25,6 +25,11 @@ function initRequest(config: any) {
 
 function initTask(config: any, request: Request) {
   return new Task((reject, resolve) => {
+    // if (checkIfObject(reject)) {
+    //   resolve = reject.resolve;
+    //   reject = reject.reject;
+    // }
+    checkRejectionCallback(reject);
     let request = sendRequest(resolve, reject);
     formConfigurations(config.url, { ...config, url: undefined })
       .then(request)
