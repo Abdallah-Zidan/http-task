@@ -1,4 +1,4 @@
-import { Task } from "../ADT";
+import { Task } from "../task";
 import { Request } from "../http";
 import { RequestConfigurations } from "./request";
 export type TaskFromConfig = (input: RequestConfigurations) => Task<Request>;

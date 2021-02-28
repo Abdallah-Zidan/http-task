@@ -1,17 +1,43 @@
-import { compose, map } from "./../utility/functions";
+import { compose, map } from "../utility/functions";
 import { ForkMethod, MappableFunction, ChainableFunction } from "../types";
 import { RequestResponse } from "../types/response";
 import { TaskRejectionType } from "../types/errors";
 
+enum State {
+  FULLFILLED = "FULLFILLED",
+  REJECTED = "REJECTED",
+  PENDING = "PENDING",
+}
+
+
 export class Task<T> {
   fork: ForkMethod<TaskRejectionType, RequestResponse>;
   request: T;
+  state = State.PENDING;
   constructor(
     fork: ForkMethod<TaskRejectionType, RequestResponse>,
     request: T
   ) {
-    this.fork = fork;
+    this.fork = (rej, res) => fork(this.onRej(rej), this.onRes(res));
     this.request = request;
+  }
+
+  onRej(rej: any) {
+    return (e: any) => {
+      if (this.state === State.PENDING) {
+        this.state = State.REJECTED;
+        rej(e);
+      }
+    };
+  }
+
+  onRes(res: any) {
+    return (d: any) => {
+      if (this.state === State.PENDING) {
+        this.state = State.FULLFILLED;
+        res(d);
+      }
+    };
   }
 
   static of<T>(

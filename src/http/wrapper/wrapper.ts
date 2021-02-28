@@ -1,11 +1,14 @@
-import { TaskFunction } from "../../types/task";
-import { RequestConfigurations } from "../../types";
-import { compactObj } from "../../utility";
 import { urlToConfig } from "./url";
+import { Types } from "../response";
+import { compactObj } from "../../utility";
+import { Task, checkRejectionCallback } from "../../task";
 import { sendRequest, manageUnauthorized } from "../adapter";
-import { Types } from "../response/content-types";
-import { Task, checkRejectionCallback } from "../../ADT";
-import { ConfigurationsError } from "../../types/errors";
+import {
+  TaskFunction,
+  ConfigurationsError,
+  RequestConfigurations,
+} from "../../types";
+
 async function formConfigurations(
   url: string,
   config: any
@@ -37,21 +40,25 @@ function initTask(config: any, request: Request) {
 }
 
 export class Request {
-  #config: RequestConfigurations;
+  config!: RequestConfigurations;
 
-  #defaultHeaders = {
+  private defaultHeaders = {
     "Content-Type": "application/json",
   };
 
   constructor(config: RequestConfigurations) {
+    this.manageConfig(config);
+  }
+
+  private manageConfig(config: RequestConfigurations) {
     let headers = config.headers
       ? {
-          ...this.#defaultHeaders,
+          ...this.defaultHeaders,
           ...config.headers,
         }
-      : this.#defaultHeaders;
+      : this.defaultHeaders;
 
-    this.#config = {
+    this.config = {
       ...config,
       headers,
       rejectUnauthorized: manageUnauthorized({ config }),
@@ -69,34 +76,30 @@ export class Request {
   setContentType(type: Types) {
     if (!Object.values(Types).includes(type))
       throw new Error("trying to set invalid or unsupported content type");
-    else this.#config.headers["Content-Type"] = type;
+    else this.config.headers["Content-Type"] = type;
     return this;
   }
 
-  get config() {
-    return this.#config;
-  }
-
   addConfig(config: RequestConfigurations) {
-    this.#config = {
-      ...this.#config,
+    this.config = {
+      ...this.config,
       ...config,
-      rejectUnauthorized: manageUnauthorized({ config, old: this.#config }),
+      rejectUnauthorized: manageUnauthorized({ config, old: this.config }),
     };
     return this;
   }
 
   allowUnauthorized() {
-    this.#config.rejectUnauthorized = false;
+    this.config.rejectUnauthorized = false;
     return this;
   }
 
   send() {
-    return initRequest(compactObj(this.#config));
+    return initRequest(compactObj(this.config));
   }
 
   sendTask() {
-    return initTask(compactObj(this.#config), this);
+    return initTask(compactObj(this.config), this);
   }
 }
 

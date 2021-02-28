@@ -30,6 +30,4 @@ export const isUndefinedS = (v: any) => !definedS(v);
 export const mapObject = curry(
   (fn: ObjectMappingFunction, obj: object) => obj && Object.entries(obj).map(fn)
 );
-export function trim(str: string) {
-  return str.trim();
-}
+export const trim = (str: string) => str && str.trim();
