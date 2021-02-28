@@ -44,6 +44,6 @@ export interface ConfigError {
   code: number;
 }
 
-export type TaskRejectionType = RequestError | ResponseError;
 export type ConfigurationsError = ParsingError | ConfigError;
+export type TaskRejectionType = ConfigurationsError | RequestError | ResponseError;
 

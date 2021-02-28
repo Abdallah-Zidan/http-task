@@ -1,17 +1,23 @@
 import { compose, map } from "./../utility/functions";
 import { ForkMethod, MappableFunction, ChainableFunction } from "../types";
-import {RequestResponse} from '../types/response';
-import {TaskRejectionType} from '../types/errors';
+import { RequestResponse } from "../types/response";
+import { TaskRejectionType } from "../types/errors";
 
 export class Task<T> {
-  fork: ForkMethod<TaskRejectionType,RequestResponse>;
+  fork: ForkMethod<TaskRejectionType, RequestResponse>;
   request: T;
-  constructor(fork: ForkMethod<TaskRejectionType,RequestResponse>, request: T) {
+  constructor(
+    fork: ForkMethod<TaskRejectionType, RequestResponse>,
+    request: T
+  ) {
     this.fork = fork;
     this.request = request;
   }
 
-  static of<T>(fork: ForkMethod<TaskRejectionType,RequestResponse>, request: T) {
+  static of<T>(
+    fork: ForkMethod<TaskRejectionType, RequestResponse>,
+    request: T
+  ) {
     return new Task<T>(fork, request);
   }
 
@@ -43,6 +49,10 @@ export class Task<T> {
     );
   }
 
+  mapRequest(f: any) {
+    this.request = f(this.request);
+    return this;
+  }
   pipe(...fns: MappableFunction[]) {
     return fns.reduce((p, f) => map(f, p), this);
   }
