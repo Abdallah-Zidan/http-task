@@ -14,6 +14,9 @@ export function curry(fn: Function) {
 export const compose = (...fns: Function[]) => (...args: any[]) =>
   fns.reduceRight((p, f) => [f.call(null, ...p)], args)[0];
 
+export const pipe = (...fns: Function[]) => (...args: any[]) =>
+  fns.reduce((p, f) => [f.call(null, ...p)], args)[0];
+
 export const map = curry((fn: MappableFunction, f: MappableFunctor) =>
   f.map(fn)
 );
@@ -23,7 +26,6 @@ export const definedS = (v: any) =>
   defined(v) && v !== "null" && v !== "undefined";
 export const isUndefined = (v: any) => !defined(v);
 export const isUndefinedS = (v: any) => !definedS(v);
-
 
 export const mapObject = curry(
   (fn: ObjectMappingFunction, obj: object) => obj && Object.entries(obj).map(fn)

@@ -1,12 +1,15 @@
-import { TaskFunction } from "./../../types/task";
-import { RequestConfigurations } from "./../../types";
+import { TaskFunction } from "../../types/task";
+import { RequestConfigurations } from "../../types";
 import { compactObj } from "../../utility";
 import { urlToConfig } from "./url";
 import { sendRequest, manageUnauthorized } from "../adapter";
 import { Types } from "../response/content-types";
 import { Task, checkRejectionCallback } from "../../ADT";
-
-async function formConfigurations(url: string, config: any) {
+import { ConfigurationsError } from "../../types/errors";
+async function formConfigurations(
+  url: string,
+  config: any
+): Promise<ConfigurationsError | any> {
   const urlConfig = await urlToConfig(url);
   return {
     ...urlConfig,
@@ -24,11 +27,7 @@ function initRequest(config: any) {
 }
 
 function initTask(config: any, request: Request) {
-  return new Task((reject, resolve) => {
-    // if (checkIfObject(reject)) {
-    //   resolve = reject.resolve;
-    //   reject = reject.reject;
-    // }
+  return new Task((reject, resolve: any) => {
     checkRejectionCallback(reject);
     let request = sendRequest(resolve, reject);
     formConfigurations(config.url, { ...config, url: undefined })

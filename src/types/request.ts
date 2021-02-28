@@ -6,16 +6,6 @@ export interface RequestInfo {
   timeout: number;
 }
 
-export interface AbstractError {
-  code: any;
-  message: string;
-}
-
-export interface ParsingError extends AbstractError {
-  hostname: string;
-  errno: any;
-  syscall: any;
-}
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 export interface RequestConfigurations {

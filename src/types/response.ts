@@ -1,7 +1,14 @@
-export interface AbstractResponse {}
+export interface AbstractResponse {
+  semantic: string;
+  status?: number;
+  statusText?: string;
+}
 
-export interface RequestResponse extends AbstractResponse {}
+export interface RequestResponse extends AbstractResponse {
+  ok?: string;
+  contentType?: string;
+  data?: object;
+  headers?: object;
+}
 
-export interface RequestError extends AbstractResponse {}
 
-export interface ResponseError extends AbstractResponse {}

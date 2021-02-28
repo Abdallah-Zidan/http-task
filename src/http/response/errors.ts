@@ -1,7 +1,7 @@
 import { dropAttr } from "./../../utility/operators";
-import { ParsingError } from "./../../types";
 import { curry, compactObj } from "../../utility";
 import { Semantic } from "../semantics";
+import { ParsingError } from "../../types/errors";
 
 export const getRequestInfo = (req: any) =>
   compactObj(dropAttr(["nativeProtocols"], req._options));

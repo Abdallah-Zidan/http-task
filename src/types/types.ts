@@ -1,13 +1,9 @@
-export type ResolveFunction = (d: any) => any;
-export type RejectFunction = (e: any) => any;
+export type ResolveFunction<R> = (d: R) => any;
+export type RejectFunction<E> = (e: E) => any;
 
-export type ResolverObject = {
-  reject: (e: any) => any;
-  resolve: ResolveFunction;
-};
-export type ForkMethod = (
-  reject: RejectFunction,
-  resolve: ResolveFunction
+export type ForkMethod<E, R> = (
+  reject: RejectFunction<E>,
+  resolve: ResolveFunction<R>
 ) => void;
 export type MappableFunction = (d: any) => any;
 export type ChainableFunction<T> = (d: any) => T;

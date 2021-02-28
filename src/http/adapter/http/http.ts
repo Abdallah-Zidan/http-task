@@ -10,6 +10,8 @@ import { Semantic } from "../../semantics";
 import { extractInitialInfo, formOkResponse } from "../../response/response";
 import { IncomingMessage } from "http";
 import { RejectFunction, ResolveFunction } from "../../../types";
+import { RequestResponse } from "../../../types/response";
+import { TaskRejectionType } from "../../../types/errors";
 
 declare function require(name: string): any;
 
@@ -36,7 +38,11 @@ function writeData(req: any, reject: any, config: any) {
 }
 
 export const sendRequest = curry(
-  (resolve: ResolveFunction, reject: RejectFunction, config: any) => {
+  (
+    resolve: ResolveFunction<RequestResponse>,
+    reject: RejectFunction<TaskRejectionType>,
+    config: any
+  ) => {
     let client = config.isSSL ? https : http;
     if (!defined(config.maxRedirects)) config.maxRedirects = 5;
     const req = client.request(config, (res: IncomingMessage) => {
@@ -50,6 +56,7 @@ export const sendRequest = curry(
       });
 
       res.on("error", (e: any) => {
+        req.destroy();
         reject(responseErr(req, e));
       });
       res.on("close", () => {
@@ -74,7 +81,7 @@ export const sendRequest = curry(
 
     req.on("timeout", () => {
       req.destroy();
-      reject(timeoutErr(req, {}));
+      return reject(timeoutErr(req, {}));
     });
 
     if (config.method !== "GET" && config.body) {

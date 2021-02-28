@@ -1,28 +1,30 @@
 import { compose, map } from "./../utility/functions";
 import { ForkMethod, MappableFunction, ChainableFunction } from "../types";
+import {RequestResponse} from '../types/response';
+import {TaskRejectionType} from '../types/errors';
 
 export class Task<T> {
-  fork: ForkMethod;
+  fork: ForkMethod<TaskRejectionType,RequestResponse>;
   request: T;
-  constructor(fork: ForkMethod, request: T) {
+  constructor(fork: ForkMethod<TaskRejectionType,RequestResponse>, request: T) {
     this.fork = fork;
     this.request = request;
   }
 
-  static of(fork: ForkMethod, request: any) {
-    return new Task(fork, request);
+  static of<T>(fork: ForkMethod<TaskRejectionType,RequestResponse>, request: T) {
+    return new Task<T>(fork, request);
   }
 
-  static resolve(d: any) {
-    return new Task((_, res) => {
+  static resolve<T>(d: any, t: T) {
+    return new Task<T>((_, res) => {
       res(d);
-    }, null);
+    }, t);
   }
 
-  static reject(e: any) {
-    return new Task((reject) => {
+  static reject<T>(e: any, t: T) {
+    return new Task<T>((reject) => {
       reject(e);
-    }, null);
+    }, t);
   }
 
   map(f: MappableFunction) {
@@ -47,5 +49,17 @@ export class Task<T> {
 
   compose(...fns: MappableFunction[]) {
     return fns.reduceRight((p, f) => map(f, p), this);
+  }
+
+  promise() {
+    return new Promise((resolve, reject) => {
+      this.fork(reject, resolve);
+    });
+  }
+
+  static fromPromise(p: any) {
+    return new Task((reject, resolve) => {
+      p.then(resolve).catch(reject);
+    }, null);
   }
 }
