@@ -1,5 +1,12 @@
-import { defined } from "../../../utility";
-export function manageUnauthorized({ config, old }: { config: any; old?: any }) {
+import { defined } from "../utility";
+
+export function manageUnauthorized({
+  config,
+  old,
+}: {
+  config: any;
+  old?: any;
+}) {
   if (
     !defined(config.allowUnauthorized) &&
     !defined(config.rejectUnauthorized)

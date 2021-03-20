@@ -17,7 +17,7 @@ export const compose = (...fns: Function[]) => (...args: any[]) =>
 export const pipe = (...fns: Function[]) => (...args: any[]) =>
   fns.reduce((p, f) => [f.call(null, ...p)], args)[0];
 
-export const map = curry((fn: MappableFunction, f: MappableFunctor) =>
+export const map = curry((fn: MappableFunction<any>, f: MappableFunctor<any>) =>
   f.map(fn)
 );
 export const isArray = (v: any) => v && Array.isArray(v);

@@ -1,17 +1,28 @@
-import { defined } from "../utility";
+import { RejectFunction, ResolveFunction } from "../types";
 
-export const checkRejectionCallback = (rejFun: any) => {
-  if (!rejFun || typeof rejFun !== "function")
+const callable = (d: any) => typeof d === "function";
+const isObject = (d: any) => typeof d === "object" && d !== null;
+
+type ReturnType = {
+  resolve: ResolveFunction<any>;
+  reject: RejectFunction<any>;
+};
+
+export default function validateCallbacks(
+  rejFunction: any,
+  resFunction: any
+): ReturnType {
+  if (isObject(rejFunction)) {
+    resFunction = rejFunction.resolve;
+    rejFunction = rejFunction.reject;
+  }
+
+  if (!callable(rejFunction))
     throw new Error(
       "you must handle rejection by providing {reject : [Function]} which will receive rejection error"
     );
-};
 
-const callable = (d:any) => typeof d === "function";
+  if (!callable(resFunction)) resFunction = () => {};
 
-export const checkIfObject = (rej: any) =>
-  typeof rej === "object" &&
-  defined(rej.resolve) &&
-  defined(rej.reject) &&
-  callable(rej.reject) &&
-  callable(rej.resolve);
+  return { reject: rejFunction, resolve: resFunction };
+}

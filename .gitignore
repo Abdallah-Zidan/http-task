@@ -3,3 +3,4 @@ tests
 *lock.json
 package-lock.json
 dist
+*.lock

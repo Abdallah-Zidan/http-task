@@ -7,7 +7,7 @@ export const prop = curry((name: any, obj: any) => obj && obj[name]);
 export const split = curry((d: string, str: string) => str.split(d));
 export const capitalize = (str: string) =>
   str && str[0].toUpperCase() + str.substring(1).toLowerCase();
-export const tap = curry((fn: MappableFunction, d: any) => {
+export const tap = curry((fn: MappableFunction<any>, d: any) => {
   fn(d);
   return d;
 });

@@ -1,101 +1,125 @@
+import EventEmitter from "events";
 import { compose, map } from "../utility/functions";
-import { ForkMethod, MappableFunction, ChainableFunction } from "../types";
-import { RequestResponse } from "../types/response";
-import { TaskRejectionType } from "../types/errors";
+import {
+  ForkMethod,
+  MappableFunction,
+  ChainableFunction,
+  TaskableMapper,
+  EventType,
+  EventHandler,
+} from "../types";
 
-enum State {
+import validateCallbacks from "./check";
+
+class TaskEmitter extends EventEmitter {}
+
+export enum State {
   FULLFILLED = "FULLFILLED",
   REJECTED = "REJECTED",
   PENDING = "PENDING",
 }
 
+export const Events = {
+  REJECTED: "REJECTED",
+  FULLFILLED: "FULLFILLED",
+  COMPLETE: "COMPLETE",
+  START: "START",
+};
 
-export class Task<T> {
-  fork: ForkMethod<TaskRejectionType, RequestResponse>;
-  request: T;
+const isValidEvent = (ev: EventType) => Events[ev];
+const emit = (listener: EventEmitter, events: any[], state: any, data: any) =>
+  events.forEach((e) => listener.emit(e, { state, data }));
+
+export class Task<T, R, E> {
+  fork: ForkMethod<E, R>;
+  taskable: T;
   state = State.PENDING;
-  constructor(
-    fork: ForkMethod<TaskRejectionType, RequestResponse>,
-    request: T
-  ) {
-    this.fork = (rej, res) => fork(this.onRej(rej), this.onRes(res));
-    this.request = request;
+
+  protected listener = new TaskEmitter();
+
+  constructor(fork: ForkMethod<E, R>, taskable: T) {
+    this.fork = (rej, res) => {
+      let { reject, resolve } = validateCallbacks(rej, res);
+      emit(this.listener, [Events.START], this.state, taskable);
+      fork(this.onRej(reject), this.onRes(resolve));
+      return this;
+    };
+    this.taskable = taskable;
   }
 
-  onRej(rej: any) {
+  protected onRej(rej: any) {
     return (e: any) => {
-      if (this.state === State.PENDING) {
-        this.state = State.REJECTED;
-        rej(e);
-      }
+      rej(e);
+      this.state = State.REJECTED;
+      emit(this.listener, [Events.REJECTED, Events.COMPLETE], this.state, e);
     };
   }
 
-  onRes(res: any) {
+  protected onRes(res: any) {
     return (d: any) => {
-      if (this.state === State.PENDING) {
-        this.state = State.FULLFILLED;
-        res(d);
-      }
+      res(d);
+      this.state = State.FULLFILLED;
+      emit(this.listener, [Events.FULLFILLED, Events.COMPLETE], this.state, d);
     };
   }
 
-  static of<T>(
-    fork: ForkMethod<TaskRejectionType, RequestResponse>,
-    request: T
-  ) {
-    return new Task<T>(fork, request);
+  static of<T, R, E>(fork: ForkMethod<E, R>, taskable: T) {
+    return new Task<T, R, E>(fork, taskable);
   }
 
-  static resolve<T>(d: any, t: T) {
-    return new Task<T>((_, res) => {
+  static resolve(d: any, t: any) {
+    return Task.of((_, res) => {
       res(d);
     }, t);
   }
 
-  static reject<T>(e: any, t: T) {
-    return new Task<T>((reject) => {
-      reject(e);
+  static reject(e: any, t: any) {
+    return Task.of((rej, _) => {
+      if (typeof rej === "function") rej(e);
     }, t);
   }
 
-  map(f: MappableFunction) {
-    return new Task((reject, resolve) => {
-      this.fork(reject, compose(resolve, f));
-    }, this.request);
+  static from<T, R, E>(task: Task<T, R, E>) {
+    let t = new Task<T, R, E>(task.fork, task.taskable);
+    t.state = State.PENDING;
+    return t;
   }
 
-  chain(fn: ChainableFunction<Task<T>>) {
-    return new Task(
+  map(f: MappableFunction<R>) {
+    return new Task<T, R, E>((reject, resolve) => {
+      this.fork(reject, compose(resolve, f));
+    }, this.taskable);
+  }
+
+  chain(fn: ChainableFunction<Task<T, R, E>, R>) {
+    return new Task<T, R, E>(
       (reject, resolve) =>
-        this.fork(reject, (x) => {
+        this.fork(reject, (x: R) => {
           return fn(x).fork(reject, resolve);
         }),
-      this.request
+      this.taskable
     );
   }
 
-  mapRequest(f: any) {
-    this.request = f(this.request);
-    return this;
+  mapTaskable(f: TaskableMapper<T>) {
+    return new Task<T, R, E>(this.fork, f(this.taskable));
   }
-  pipe(...fns: MappableFunction[]) {
+
+  pipe(...fns: MappableFunction<R>[]) {
     return fns.reduce((p, f) => map(f, p), this);
   }
 
-  compose(...fns: MappableFunction[]) {
+  compose(...fns: MappableFunction<R>[]) {
     return fns.reduceRight((p, f) => map(f, p), this);
   }
 
   promise() {
-    return new Promise((resolve, reject) => {
+    return new Promise<R>((resolve, reject) => {
       this.fork(reject, resolve);
     });
   }
 
-  static fromPromise(p: any) {
-    return new Task((reject, resolve) => {
-      p.then(resolve).catch(reject);
-    }, null);
+  listen(event: EventType, handler: EventHandler) {
+    if (isValidEvent(event)) this.listener.once(event, handler);
   }
 }
