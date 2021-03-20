@@ -1,4 +1,4 @@
-import { AxiosRequestConfig } from "axios";
+import { AxiosError, AxiosRequestConfig } from "axios";
 
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 export interface RequestConfigurations extends AxiosRequestConfig {
@@ -36,7 +36,7 @@ export interface RequestConfigurations extends AxiosRequestConfig {
 }
 
 export interface RetryConfig {
-  retries: number;
-  delay: number;
-  onRetry?: any;
+  retries?: number;
+  delay?: number;
+  onRetry?: (e: AxiosError, retries: number) => any;
 }

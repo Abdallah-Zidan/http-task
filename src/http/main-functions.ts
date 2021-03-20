@@ -11,7 +11,6 @@ const httpsAgent = new https.Agent({
 });
 
 export function initRequest(config: any, client: AxiosInstance) {
-  
   return client(
     compactObj({
       ...config(),
@@ -30,8 +29,13 @@ export function initTask(config: any, client: AxiosInstance, request: Request) {
 export function retryRequest(
   config: any,
   client: AxiosInstance,
-  { retries = 3, delay = 1000, onRetry = (_: AxiosError, _$: number) => {} }
+  retryConfig?: RetryConfig
 ): any {
+  let {
+    retries = 3,
+    delay = 1000,
+    onRetry = (_: AxiosError, _$: number) => {},
+  } = retryConfig || {};
   return initRequest(config, client).catch((e) => {
     if (retries < 1) throw e;
     onRetry(e, retries);
@@ -53,7 +57,7 @@ export function initRetryable(
   config: any,
   client: AxiosInstance,
   request: Request,
-  retryConfig: RetryConfig
+  retryConfig?: RetryConfig
 ) {
   return new Task<Request, AxiosResponse, AxiosError>((reject, resolve) => {
     retryRequest(config, client, retryConfig).then(resolve).catch(reject);
