@@ -1,5 +1,5 @@
-import { Request  } from "./http";
-import { RequestConfigurations, TaskFunction,RetryConfig } from "./types";
+import { Request } from "./http";
+import { RequestConfigurations, TaskFunction, RetryConfig } from "./types";
 import { Task } from "./task";
 import { AxiosError, AxiosResponse } from "axios";
 
@@ -15,7 +15,7 @@ export const task: TaskFunction = (input: Request | RequestConfigurations) => {
   return Request.of(input).sendTask();
 };
 
-export function from(task: Task<Request,AxiosResponse,AxiosError>) {
+export function from(task: Task<Request, AxiosResponse, AxiosError>) {
   return Task.from(task);
 }
 

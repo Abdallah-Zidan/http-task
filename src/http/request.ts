@@ -1,4 +1,3 @@
-// import { compactObj } from "../utility";
 import { Types } from "./content-types";
 import axios, { AxiosInstance } from "axios";
 import { RequestConfigurations, RetryConfig } from "../types";
@@ -61,9 +60,9 @@ export class Request {
     return this;
   }
 
-  getConfig=()=>{
+  getConfig = () => {
     return this.config;
-  }
+  };
   send() {
     return initRequest(this.getConfig, this.client);
   }

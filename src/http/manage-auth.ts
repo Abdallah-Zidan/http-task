@@ -1,12 +1,15 @@
+
 import { defined } from "../utility";
+
+type AuthConfig =  {
+  config: any;
+  old?: any;
+}
 
 export function manageUnauthorized({
   config,
   old,
-}: {
-  config: any;
-  old?: any;
-}) {
+}: AuthConfig) {
   if (
     !defined(config.allowUnauthorized) &&
     !defined(config.rejectUnauthorized)
